@@ -1,0 +1,478 @@
+## Copyright © 2020, Oracle and/or its affiliates. 
+## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
+
+title: "Create highly available Ruby on Rails web application accessing MySQL in Oracle Cloud Infrastructure"
+stackDescription: "Deploy highly available Ruby on Rails web application accessing MySQL Database Service (MDS) in Oracle Cloud Infrastructure."
+schemaVersion: 1.1.0
+version: "20190404"
+locale: "en"
+
+variableGroups:
+- title: General Configuration
+  visible: false
+  variables:
+  - tenancy_ocid
+  - region
+  - release
+  - availablity_domain_number
+
+- title: Required Configuration
+  visible: true  
+  variables:
+  - compartment_ocid
+  - availablity_domain_name
+  - mysql_db_system_admin_password
+  - numberOfNodes
+  - ruby_version
+  - use_bastion_service
+  - show_advanced
+
+- title: Load Balancer Configuration
+  visible: 
+      and:
+        - show_advanced
+  variables:
+  - lb_shape 
+  - flex_lb_min_shape
+  - flex_lb_max_shape 
+
+- title: Network Configuration
+  visible: 
+      and:
+        - show_advanced
+  variables:
+  - igw_display_name
+  - vcn01_cidr_block
+  - vcn01_dns_label
+  - vcn01_display_name
+  - vcn01_subnet_pub01_cidr_block
+  - vcn01_subnet_pub01_display_name
+  - vcn01_subnet_pub02_cidr_block
+  - vcn01_subnet_pub02_display_name  
+  - vcn01_subnet_app01_cidr_block
+  - vcn01_subnet_app01_display_name 
+  - vcn01_subnet_db01_cidr_block
+  - vcn01_subnet_db01_display_name
+
+- title: Compute Instances Configuration
+  visible: 
+      and:
+        - show_advanced
+  variables:
+  - ssh_public_key
+  - InstanceShape
+  - InstanceFlexShapeOCPUS
+  - InstanceFlexShapeMemory
+  - instance_os
+  - linux_os_version
+
+- title: MySQL Database System Configuration
+  visible: 
+      and:
+        - show_advanced
+  variables: 
+  - mysql_shape_name
+  - mysql_is_highly_available 
+  - mysql_db_system_admin_username
+  - mysql_db_name
+  - mysql_db_system_backup_policy_is_enabled
+  - mysql_db_system_data_storage_size_in_gb
+  - mysql_db_system_display_name
+  - mysql_db_system_hostname_label
+
+variables:
+
+  show_advanced:
+    type: boolean
+    title: "Show advanced options?"
+    description: "Shows advanced options."
+    visible: true
+    default: false
+  
+  compartment_ocid:
+    type: oci:identity:compartment:id
+    required: true
+    visibile: true
+    title: Compartment
+    description: "Compartment where you want to create the solution resources"
+
+  region:
+    type: oci:identity:region:name
+    required: true
+    visibile: true
+    title: Region
+    description: "Region where you want to deploy the resources defined by this stack."
+
+  availablity_domain_name:
+    type: oci:identity:availabilitydomain:name
+    required: true
+    visibile: true
+    title: "Availability Domain to be chosen"
+    description: "Availability Domain to be chosen"
+    dependsOn:
+      compartmentId: ${compartment_ocid}
+
+  numberOfNodes:
+    type: number
+    required: false
+    minimum: 1
+    maximum: 128
+    multipleOf: 1
+    default: 2
+    title: "How many Ruby on Rails nodes?"
+    description: "Choose number of Ruby on Rails nodes to be deployed."
+
+  use_bastion_service:
+    type: boolean
+    visibile: true
+    default: false
+    required: false
+    title: "Use OCI Bastion Service"
+    description: "Check the box to use OCI Bastion Service instead of Bastion Host VM."
+
+  ruby_version:
+    type: enum
+    title: "Ruby Version"
+    description: "Choose Ruby Version"
+    default: "3.0.1"
+    required: false 
+    enum:
+      - "3.0.1"
+      - "3.0.0"
+      - "2.7.4"
+
+  mysql_is_highly_available:
+    type: boolean
+    title: "MySQL Database System in HA?"
+    description: "Choose if MySQL Database System should be highly available."
+    visible: true
+    default: false
+
+  mysql_db_system_admin_password:
+    type: password
+    required: true
+    visibile: true
+    title: "MySQL Database System Admin Password"
+    description: "Type MySQL Database System (MDS) Admin Password"
+    minLength: 9
+    maxLength: 30
+    pattern: ^[A-Za-z][A-Za-z0-9_#\$]+$ 
+ 
+  # Optional Configuration  
+  
+  lb_shape:
+    type: enum
+    title: "LoadBalancer Shape"
+    description: "Choose LoadBalancer Shape"
+    default: "flexible"
+    required: false 
+    enum:
+      - "flexible"
+      - "100Mbps"
+      - "10Mbps"
+      - "10Mbps-Micro"
+      - "400Mbps"
+      - "8000Mbps"
+
+  flex_lb_min_shape:
+    type: enum
+    required: false
+    default: "10"
+    title: "LB Flex Min Shape"
+    description: "Choose Minimum Shape for Flex Load Balancer."
+    enum:
+      - "10"
+      - "100"
+      - "1000"
+      - "400"
+      - "8000"
+    visible:
+      and:
+        - eq:
+          - lb_shape 
+          - "flexible"
+
+  flex_lb_max_shape:
+    type: enum
+    required: false
+    default: "100"
+    title: "LB Flex Max Shape"
+    description: "Choose Maximum Shape for Flex Load Balancer."
+    enum:
+      - "10"
+      - "100"
+      - "1000"
+      - "400"
+      - "8000"
+    visible:
+      and:
+        - eq:
+          - lb_shape 
+          - "flexible"
+
+  igw_display_name:
+    type: string
+    required: false
+    title: "InternetGateway Display Name"
+    description: "Type InternetGateway Display Name."
+    default: "internet-gateway"
+
+  vcn01_cidr_block:
+    type: string
+    required: false
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    title: "VCN CIDR Block"
+    description: "Choose CIDR block for your VCN."
+    default: "10.0.0.0/16"
+
+  vcn01_dns_label:
+    type: string
+    required: false
+    title: "VCN DNS Label"
+    description: "Choose DNS Label for your VCN."
+    default: "vcn01"
+
+  vcn01_display_name:
+    type: string
+    required: false
+    title: "VCN Display Name"
+    description: "Choose Display Name for your VCN."
+    default: "vcn01"
+
+  vcn01_subnet_pub01_cidr_block:
+    type: string
+    required: false
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    title: "Load Balancer Public Subnet CIDR Block"
+    description: "Choose CIDR block for your Load Balancer Public Subnet."
+    default: "10.0.1.0/24"
+
+  vcn01_subnet_pub01_display_name:
+    type: string
+    required: false
+    title: "Load Balancer Public Subnet Display Name"
+    description: "Choose Display Name for your Load Balancer Public Subnet."
+    default: "vcn01_subnet_pub01"
+
+  vcn01_subnet_pub02_cidr_block:
+    type: string
+    required: false
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    title: "Bastion Host Public Subnet CIDR Block"
+    description: "Choose CIDR block for your Bastion Host Public Subnet."
+    default: "10.0.2.0/24"
+
+  vcn01_subnet_pub02_display_name:
+    type: string
+    required: false
+    title: "Bastion Host Public Subnet Display Name"
+    description: "Choose Display Name for your Bastion Host Public Subnet."
+    default: "vcn01_subnet_pub02"
+
+  vcn01_subnet_app01_cidr_block:
+    type: string
+    required: false
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    title: "Tomcat Servers Public Subnet CIDR Block"
+    description: "Choose CIDR block for your Tomcat Servers Public Subnet."
+    default: "10.0.10.0/24"
+
+  vcn01_subnet_app01_display_name:
+    type: string
+    required: false
+    title: "Tomcat Servers Public Subnet Display Name"
+    description: "Choose Display Name for your Tomcat Servers Public Subnet."
+    default: "vcn01_subnet_app01"
+
+  vcn01_subnet_db01_cidr_block:
+    type: string
+    required: false
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    title: "MDS Private Subnet CIDR Block"
+    description: "Choose CIDR block for your MDS Private Subnet."
+    default: "10.0.20.0/24"
+
+  vcn01_subnet_db01_display_name:
+    type: string
+    required: false
+    title: "MDS Private Subnet Display Name"
+    description: "Choose Display Name for your MDS Private Subnet."
+    default: "vcn01_subnet_db01"
+
+  ssh_public_key:
+    type: oci:core:ssh:publickey
+    title: "Public SSH Key"
+    description: "Choose public SSH Key to be uploaded into compute instances."
+    required: false
+    
+  InstanceShape:
+    type: oci:core:instanceshape:name
+    required: false
+    title: "Instance Shape"
+    description: "A shape is a template that determines the number of CPUs, amount of memory, and other resources allocated to a newly created instance."
+    default: "VM.Standard.E3.Flex"
+    dependsOn:
+      compartmentId: ${compartment_ocid}
+
+  InstanceFlexShapeOCPUS:
+    type: number
+    required: false
+    minimum: 1
+    maximum: 128
+    multipleOf: 1
+    default: 1
+    title: "Flex Shape OCPUs"
+    description: "Choose number of OCPUs for Flex Shape."
+    visible:
+      and:
+        - or:
+          - eq:
+            - InstanceShape 
+            - "VM.Standard.E3.Flex"
+          - eq:
+            - InstanceShape 
+            - "VM.Standard.E4.Flex"
+          - eq:
+            - InstanceShape 
+            - "VM.Standard.A1.Flex"
+          - eq:
+            - InstanceShape 
+            - "VM.Optimized3.Flex"
+
+  InstanceFlexShapeMemory:
+    type: number
+    required: false
+    minimum: 1
+    maximum: 128
+    multipleOf: 1
+    default: 6
+    title: "Flex Shape Memory (GB)"
+    description: "Choose number GB for Flex Shape Memory."
+    visible:
+      and:
+        - or:
+          - eq:
+            - InstanceShape 
+            - "VM.Standard.E3.Flex"
+          - eq:
+            - InstanceShape 
+            - "VM.Standard.E4.Flex"
+          - eq:
+            - InstanceShape 
+            - "VM.Standard.A1.Flex"
+          - eq:
+            - InstanceShape 
+            - "VM.Optimized3.Flex"
+
+  instance_os:
+    type: enum
+    required: false
+    title: "Instance OS"
+    description: "An Operating System that determines the operating system for the instance."
+    default: "Canonical Ubuntu"
+    enum:
+      - "Canonical Ubuntu"
+
+  linux_os_version:
+    type: enum
+    required: false
+    title: "Instance OS version"
+    description: "An Operating System version that determines the operating system version for the instance."
+    default: "20.04"
+    enum:
+      - "20.04"
+      - "18.04"
+
+  mysql_shape_name:
+    type: enum
+    required: false
+    default: "MySQL.VM.Standard.E3.1.8GB"
+    title: "MySQL Database System Shape"
+    description: "Choose MySQL Database System Shape (MDS) for your deployment."
+    enum:
+      - "VM.Standard.E2.1"
+      - "VM.Standard.E2.2"
+      - "VM.Standard.E2.4"  
+      - "VM.Standard.E2.8"
+      - "MySQL.VM.Standard.E3.1.8GB"
+      - "MySQL.VM.Standard.E3.1.16GB"      
+      - "MySQL.VM.Standard.E3.2.32GB"
+      - "MySQL.VM.Standard.E3.4.64GB"
+      - "MySQL.VM.Standard.E3.8.128GB"
+      - "MySQL.VM.Standard.E3.16.256GB"
+      - "MySQL.VM.Standard.E3.24.384GB"
+      - "MySQL.VM.Standard.E3.32.512GB"
+      - "MySQL.VM.Standard.E3.48.768GB"    
+      - "MySQL.VM.Standard.E3.64.1024GB"  
+      - "MySQL.HeatWave.VM.Standard.E3"      
+
+  mysql_db_system_admin_username:
+    type: string
+    required: false
+    title: "MySQL Database System Admin Username"
+    description: "Type Database System (MDS) Admin Username."
+    default: "admin"
+
+  mysql_db_name:
+    type: string
+    required: false
+    title: "MySQL Database System DB Name"
+    description: "Type MySQL Database System (MDS) DB Name."
+    default: "mydb"
+
+  mysql_db_system_backup_policy_is_enabled:
+    type: boolean 
+    default: true
+    required: false
+    title: "MySQL Database System Backup Policy Enabled"
+    description: "MySQL Database System (MDS) Backup Policy Enabled."
+
+  mysql_db_system_data_storage_size_in_gb:
+    type: number
+    required: false
+    minimum: 50
+    maximum: 65536
+    multipleOf: 1
+    default: 50 
+    title: "MySQL Database System Data Storage size in GB"
+    description: "Choose MySQL Database System (MDS) Data Storage size in GB."
+
+  mysql_db_system_display_name: 
+    type: string
+    required: false
+    title: "MySQL Database System Display Name"
+    description: "Type MySQL Database System (MDS) Display Name."
+    default: "mysql_service"
+
+  mysql_db_system_hostname_label: 
+    type: string
+    required: false
+    title: "MySQL Database System Hostname Label"
+    description: "Type MySQL Database System (MDS) Hostname Label."
+    default: "mysqlhost"
+
+  release:
+    type: string
+    required: false
+    visible: false
+    title: "Reference Architecture Release (OCI Architecture Center)"
+
+outputs:
+
+  generated_ssh_private_key:
+    title: "Generated SSH Private Key"
+    displayText: "Generated SSH Private Key"
+    type: copyableString
+    visible: true
+
+  railsapp_url:
+    title: "Rails App URL"
+    displayText: "Rails App URL"
+    type: copyableString
+    visible: true
+
+  bastion_public_ip:
+    title: "Bastion Host Public IP"
+    displayText: "Bastion Host Public IP"
+    type: string
+    visible: true
