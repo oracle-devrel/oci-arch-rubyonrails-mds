@@ -1,7 +1,21 @@
 ## Copyright © 2021, Oracle and/or its affiliates. 
 ## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
+
+resource "time_sleep" "wait_2min" {
+  depends_on = [
+    oci_core_instance.ror-server
+  ]
+  create_duration = "240s"
+}
+
+
+
 resource "oci_bastion_bastion" "bastion-service" {
+
+   depends_on = [
+    time_sleep.wait_2min
+  ]
   count                        = var.use_bastion_service ? 1 : 0
   bastion_type                 = "STANDARD"
   compartment_id               = var.compartment_ocid
