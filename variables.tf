@@ -6,16 +6,29 @@ variable "release" {
   default     = "1.6"
 }
 
-variable "tenancy_ocid" {}
-variable "region" {}
-variable "compartment_ocid" {}
+variable "tenancy_ocid" {
+  type = string
+  default= ""
+}
+variable "region" {
+  type = string
+  default = ""
+}
+variable "compartment_ocid" {
+  type = string
+  default = ""
+  }
 #variable "fingerprint" {}
 #variable "user_ocid" {}
 #variable "private_key_path" {}
 variable "availablity_domain_name" {
+  type= string
   default = ""
 }
-variable "mysql_db_system_admin_password" {}
+variable "mysql_db_system_admin_password" {
+type = string
+default = ""
+}
 
 variable "use_bastion_service" {
   default = true

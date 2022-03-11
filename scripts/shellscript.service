@@ -1,0 +1,8 @@
+[Unit]
+Description=start rails
+
+[Service]
+ExecStart=/opt/apps/myapp/start_rails.sh start
+
+[Install]
+WantedBy=multi-user.target
