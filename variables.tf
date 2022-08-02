@@ -4,34 +4,36 @@
 variable "release" {
   description = "Reference Architecture Release (OCI Architecture Center)"
   default     = "1.6"
+  type        = string
+  nullable    = false
 }
 
 variable "tenancy_ocid" {
-  type = string
-  default= ""
+  type    = string
+  default = ""
 }
 variable "region" {
-  type = string
+  type    = string
   default = ""
 }
 variable "compartment_ocid" {
-  type = string
+  type    = string
   default = ""
-  }
-#variable "fingerprint" {}
-#variable "user_ocid" {}
-#variable "private_key_path" {}
+}
+
 variable "availablity_domain_name" {
-  type= string
+  type    = string
   default = ""
 }
 variable "mysql_db_system_admin_password" {
-type = string
-default = ""
+  type    = string
+  default = ""
 }
 
 variable "use_bastion_service" {
-  default = true
+  description = "Indicates whether a bestion service should be used or access for an exposed VM"
+  default     = true
+  nullable    = false
 }
 
 variable "availablity_domain_number" {
@@ -43,11 +45,14 @@ variable "ssh_public_key" {
 }
 
 variable "numberOfNodes" {
-  default = 2
+  default  = 2
+  nullable = false
 }
 
 variable "ruby_version" {
-  default = "3.0.1"
+  default     = "3.0.1"
+  nullable    = false
+  description = "Set the Ruby version to be used"
 }
 
 variable "igw_display_name" {
@@ -109,7 +114,10 @@ variable "flex_lb_max_shape" {
 }
 
 variable "InstanceShape" {
-  default = "VM.Standard.E3.Flex"
+  default     = "VM.Standard.E3.Flex"
+  type        = string
+  nullable    = false
+  description = "Defines the name of the instance shape to be used"
 }
 
 variable "InstanceFlexShapeOCPUS" {
@@ -126,9 +134,10 @@ variable "instance_os" {
 }
 
 variable "linux_os_version" {
-  description = "Operating system version for all Linux instances"
+  description = "Operating system version for all Ubuntu Linux instances"
   default     = "20.04"
-  #  default     = "7.9"
+  type        = string
+  nullable    = false
 }
 
 variable "mysql_db_system_admin_username" {
@@ -143,7 +152,10 @@ variable "mysql_db_name" {
 # variable mysql_configuration_id {}
 
 variable "mysql_shape_name" {
-  default = "MySQL.VM.Standard.E3.1.8GB"
+  default     = "MySQL.VM.Standard.E3.1.8GB"
+  nullable    = false
+  description = "The compute shape for the mySQL database"
+  type        = string
 }
 
 variable "mysql_is_highly_available" {
