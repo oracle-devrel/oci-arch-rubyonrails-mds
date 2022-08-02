@@ -26,8 +26,16 @@ variable "availablity_domain_name" {
   default = ""
 }
 variable "mysql_db_system_admin_password" {
-  type    = string
-  default = ""
+  type        = string
+  nullable    = false
+  description = "Password for MySQL admin account"
+  sensitive   = true
+  validation {
+    #condition     = length(var.mysql_db_system_admin_password) >= 12
+    condition     = (length(var.mysql_db_system_admin_password) >= 8) && (can(regex("^[A-Za-z\\d!#&]{8,}", var.mysql_db_system_admin_password)))
+    error_message = "MySQL Password not doesn't satisfy requirement"
+  }
+
 }
 
 variable "use_bastion_service" {
@@ -141,7 +149,11 @@ variable "linux_os_version" {
 }
 
 variable "mysql_db_system_admin_username" {
-  default = "admin"
+  default     = "admin"
+  description = "user name for the MySQL admin account"
+  nullable    = false
+  type        = string
+  sensitive   = true
 }
 
 variable "mysql_db_name" {
