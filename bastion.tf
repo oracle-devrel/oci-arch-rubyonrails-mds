@@ -13,7 +13,7 @@ resource "time_sleep" "wait_2min" {
 
 resource "oci_bastion_bastion" "bastion-service" {
 
-   depends_on = [
+  depends_on = [
     time_sleep.wait_2min
   ]
   count                        = var.use_bastion_service ? 1 : 0
@@ -21,8 +21,8 @@ resource "oci_bastion_bastion" "bastion-service" {
   compartment_id               = var.compartment_ocid
   target_subnet_id             = oci_core_subnet.vcn01_subnet_pub02.id
   client_cidr_block_allow_list = ["0.0.0.0/0"]
-  defined_tags                 = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
-  name                         = "BastionService${random_id.tag.hex}"
+  defined_tags                 = local.defined_tags
+  name                         = "BastionService${local.random_id}"
   max_session_ttl_in_seconds   = 1800
 }
 
@@ -88,10 +88,10 @@ resource "oci_core_instance" "bastion_instance" {
 
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
-    user_data           = data.template_cloudinit_config.cloud_init.rendered
+    user_data           = data.cloudinit_config.cloud_init.rendered
   }
 
-  defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
+  defined_tags = local.defined_tags
 }
 
 

@@ -13,5 +13,5 @@ resource "oci_mysql_mysql_db_system" "mds01_mysql_db_system" {
   display_name            = var.mysql_db_system_display_name
   hostname_label          = var.mysql_db_system_hostname_label
   is_highly_available     = var.mysql_is_highly_available
-  defined_tags            = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
+  defined_tags            = local.defined_tags
 }

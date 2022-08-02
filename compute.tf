@@ -1,21 +1,26 @@
 ## Copyright © 2021, Oracle and/or its affiliates. 
 ## All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
-data "template_file" "key_script" {
-  template = file("./scripts/sshkey.tpl")
-  vars = {
-    ssh_public_key = tls_private_key.public_private_key_pair.public_key_openssh
-  }
+#data "template_file" "key_script" {
+#  template = file("./scripts/sshkey.tpl")
+#  vars = {
+#    ssh_public_key = tls_private_key.public_private_key_pair.public_key_openssh
+#  }
+#}
+locals {
+  is_flexible_node_shape = contains(local.compute_flexible_shapes, var.InstanceShape)
+
+  key_script = templatefile("./scripts/sshkey.tpl", { ssh_public_key = tls_private_key.public_private_key_pair.public_key_openssh })
 }
 
-data "template_cloudinit_config" "cloud_init" {
+data "cloudinit_config" "cloud_init" {
   gzip          = true
   base64_encode = true
 
   part {
     filename     = "ainit.sh"
     content_type = "text/x-shellscript"
-    content      = data.template_file.key_script.rendered
+    content      = local.key_script
   }
 }
 
@@ -29,10 +34,6 @@ locals {
   ]
 }
 
-# Checks if is using Flexible Compute Shapes
-locals {
-  is_flexible_node_shape = contains(local.compute_flexible_shapes, var.InstanceShape)
-}
 
 resource "oci_core_instance" "ror-server" {
   count               = var.numberOfNodes
@@ -70,7 +71,7 @@ resource "oci_core_instance" "ror-server" {
 
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
-    user_data           = data.template_cloudinit_config.cloud_init.rendered
+    user_data           = data.cloudinit_config.cloud_init.rendered
   }
 
   dynamic "shape_config" {
@@ -81,6 +82,6 @@ resource "oci_core_instance" "ror-server" {
     }
   }
 
-  defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
+  defined_tags = local.defined_tags
 }
 
