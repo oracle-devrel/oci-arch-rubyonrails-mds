@@ -171,7 +171,9 @@ variable "mysql_shape_name" {
 }
 
 variable "mysql_is_highly_available" {
-  default = false
+  default     = false
+  type        = bool
+  description = "Define whether or not the MySQL deployment should be made highly available"
 }
 
 variable "mysql_db_system_backup_policy_is_enabled" {

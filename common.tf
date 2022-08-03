@@ -6,6 +6,8 @@ locals {
   # declare a local for defined tags to conceal from the rest of the module how we're creating them
   random_id = module.policies.random_id
   # conceal from the rest of the module how this value is setup
+
+  namespace_name = "deploy-ror-mysql-"
 }
 module "policies" {
   #source = "../terraform-oci-arch-policies"
@@ -14,6 +16,6 @@ module "policies" {
   tenancy_ocid                  = var.tenancy_ocid
   compartment_ocid              = var.compartment_ocid
   region_name                   = var.region
-  tag_namespace                 = "deploy-ror-mysql-"
+  tag_namespace                 = local.namespace_name
   release                       = var.release
 }

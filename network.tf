@@ -14,14 +14,14 @@ resource "oci_core_internet_gateway" "vcn01_internet_gateway" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.vcn01.id
   enabled        = "true"
-  display_name   = "IGW_vcn01"
+  display_name   = "${local.namespace_name}IGW_vcn01"
   defined_tags   = local.defined_tags
 }
 
 resource "oci_core_nat_gateway" "vcn01_nat_gateway" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.vcn01.id
-  display_name   = "NAT_GW_vcn01"
+  display_name   = "${local.namespace_name}NAT_GW_vcn01"
   defined_tags   = local.defined_tags
 }
 
@@ -49,7 +49,7 @@ resource "oci_core_default_security_list" "vcn01_default_security_list" {
 resource "oci_core_security_list" "vcn01_db_security_list" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.vcn01.id
-  display_name   = "MDSSecureList"
+  display_name   = "${local.namespace_name}MDSSecureList"
   egress_security_rules {
     destination = "0.0.0.0/0"
     protocol    = "all"
@@ -80,11 +80,12 @@ resource "oci_core_security_list" "vcn01_db_security_list" {
 resource "oci_core_route_table" "vnc01_nat_route_table" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.vcn01.id
-  display_name   = "NAT_RT"
+  display_name   = "${local.namespace_name}NAT_RT"
   route_rules {
     network_entity_id = oci_core_nat_gateway.vcn01_nat_gateway.id
-    cidr_block        = "0.0.0.0/0"
-    destination_type  = "CIDR_BLOCK"
+    #cidr_block        = "0.0.0.0/0"
+    destination      = "0.0.0.0/0"
+    destination_type = "CIDR_BLOCK"
   }
   defined_tags = local.defined_tags
 }
