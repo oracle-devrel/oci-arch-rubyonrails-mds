@@ -9,16 +9,19 @@ variable "release" {
 }
 
 variable "tenancy_ocid" {
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
+  description = "The Id of your tenancy"
 }
 variable "region" {
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
+  description = "The name of the OCI region to use"
 }
 variable "compartment_ocid" {
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
+  description = "The Id of the compartment to Terraform"
 }
 
 variable "availablity_domain_name" {
@@ -45,7 +48,9 @@ variable "use_bastion_service" {
 }
 
 variable "availablity_domain_number" {
-  default = 0
+  default     = 0
+  type        = number
+  description = "The Availability Zone within the Region to use. Depending on the region this can be 0-2"
 }
 
 variable "ssh_public_key" {
@@ -53,8 +58,9 @@ variable "ssh_public_key" {
 }
 
 variable "numberOfNodes" {
-  default  = 2
-  nullable = false
+  default     = 2
+  nullable    = false
+  description = "Number of compute nodes to create for running Ruby on Rails"
 }
 
 variable "ruby_version" {
@@ -64,11 +70,17 @@ variable "ruby_version" {
 }
 
 variable "igw_display_name" {
-  default = "internet-gateway"
+  default     = "internet-gateway"
+  type        = string
+  nullable    = false
+  description = "Name to apply to the Internet Gateway"
 }
 
 variable "vcn01_cidr_block" {
-  default = "10.0.0.0/16"
+  default     = "10.0.0.0/16"
+  description = "The IP range (CIDR block) to use with the VCN"
+  nullable    = false
+  type        = string
 }
 variable "vcn01_dns_label" {
   default = "vcn01"
@@ -78,7 +90,10 @@ variable "vcn01_display_name" {
 }
 
 variable "vcn01_subnet_pub01_cidr_block" {
-  default = "10.0.1.0/24"
+  default     = "10.0.1.0/24"
+  description = "IP Range (CIDR block) to use for the public subnet holding the Load Balancers"
+  type        = string
+  nullable    = false
 }
 
 variable "vcn01_subnet_pub01_display_name" {
@@ -86,7 +101,10 @@ variable "vcn01_subnet_pub01_display_name" {
 }
 
 variable "vcn01_subnet_pub02_cidr_block" {
-  default = "10.0.2.0/24"
+  default     = "10.0.2.0/24"
+  description = "IP Range (CIDR block) to use for the public subnet holding the Bastion resources"
+  type        = string
+  nullable    = false
 }
 
 variable "vcn01_subnet_pub02_display_name" {
@@ -139,6 +157,8 @@ variable "InstanceFlexShapeMemory" {
 variable "instance_os" {
   description = "Operating system for compute instances"
   default     = "Canonical Ubuntu"
+  nullable    = false
+  type        = string
 }
 
 variable "linux_os_version" {
