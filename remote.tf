@@ -33,6 +33,12 @@ resource "null_resource" "ror_bootstrap" {
   count      = var.numberOfNodes
   depends_on = [oci_core_instance.ror-server]
 
+  lifecycle {
+    precondition {
+      condition     = (oci_core_instance.ror-server[count.index].state == "RUNNING")
+      error_message = "RoR server not yet active"
+    }
+  }
 
   provisioner "file" {
     connection {
