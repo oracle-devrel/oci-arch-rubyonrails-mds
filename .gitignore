@@ -43,3 +43,6 @@ Temporary Items
 *.crt
 *.csr
 *.pem
+*.bkp
+
+*.xcf
