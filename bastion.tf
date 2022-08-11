@@ -13,7 +13,7 @@ resource "time_sleep" "wait_2min" {
 
 resource "oci_bastion_bastion" "bastion-service" {
 
-   depends_on = [
+  depends_on = [
     time_sleep.wait_2min
   ]
   count                        = var.use_bastion_service ? 1 : 0
@@ -21,8 +21,8 @@ resource "oci_bastion_bastion" "bastion-service" {
   compartment_id               = var.compartment_ocid
   target_subnet_id             = oci_core_subnet.vcn01_subnet_pub02.id
   client_cidr_block_allow_list = ["0.0.0.0/0"]
-  defined_tags                 = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
-  name                         = "BastionService${random_id.tag.hex}"
+  defined_tags                 = local.defined_tags
+  name                         = "BastionService${local.random_id}"
   max_session_ttl_in_seconds   = 1800
 }
 
@@ -35,6 +35,12 @@ resource "oci_bastion_session" "ssh_via_bastion_service" {
     oci_core_network_security_group_security_rule.SSHSecurityEgressGroupRule,
     oci_core_network_security_group_security_rule.SSHSecurityIngressGroupRules
   ]
+  lifecycle {
+    precondition {
+      condition     = (oci_core_instance.ror-server[count.index].state == "RUNNING")
+      error_message = "RoR server not yet active"
+    }
+  }
 
   count      = var.use_bastion_service ? var.numberOfNodes : 0
   bastion_id = oci_bastion_bastion.bastion-service[0].id
@@ -52,7 +58,7 @@ resource "oci_bastion_session" "ssh_via_bastion_service" {
     target_resource_private_ip_address         = oci_core_instance.ror-server[count.index].private_ip
   }
 
-  display_name           = "ssh_via_bastion_service"
+  display_name           = "${local.namespace_name}ssh_via_bastion_service"
   key_type               = "PUB"
   session_ttl_in_seconds = 1800
 }
@@ -62,7 +68,7 @@ resource "oci_core_instance" "bastion_instance" {
   count               = var.use_bastion_service ? 0 : 1
   availability_domain = var.availablity_domain_name == "" ? data.oci_identity_availability_domains.ADs.availability_domains[var.availablity_domain_number]["name"] : var.availablity_domain_name
   compartment_id      = var.compartment_ocid
-  display_name        = "BastionVM"
+  display_name        = "${local.namespace_name}BastionVM"
   shape               = var.InstanceShape
 
   dynamic "shape_config" {
@@ -75,7 +81,7 @@ resource "oci_core_instance" "bastion_instance" {
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.vcn01_subnet_pub02.id
-    display_name     = "primaryvnic"
+    display_name     = "${local.namespace_name}primaryvnic"
     assign_public_ip = true
     nsg_ids          = [oci_core_network_security_group.SSHSecurityGroup.id]
   }
@@ -88,10 +94,10 @@ resource "oci_core_instance" "bastion_instance" {
 
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
-    user_data           = data.template_cloudinit_config.cloud_init.rendered
+    user_data           = data.cloudinit_config.cloud_init.rendered
   }
 
-  defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
+  defined_tags = local.defined_tags
 }
 
 

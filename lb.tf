@@ -26,7 +26,7 @@ resource "oci_load_balancer" "lb01" {
   display_name               = "load_balancer_01"
   network_security_group_ids = [oci_core_network_security_group.LBSecurityGroup.id]
 
-  defined_tags = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
+  defined_tags = local.defined_tags
 }
 
 resource "oci_load_balancer_backend_set" "lb_be_app01" {

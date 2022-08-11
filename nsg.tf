@@ -6,8 +6,8 @@
 resource "oci_core_network_security_group" "SSHSecurityGroup" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.vcn01.id
-  display_name   = "Bastion_NSG"
-  defined_tags   = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
+  display_name   = "${local.namespace_name}Bastion_NSG"
+  defined_tags   = local.defined_tags
 }
 
 # SSHSecurityGroup Rules - EGRESS
@@ -41,8 +41,8 @@ resource "oci_core_network_security_group_security_rule" "SSHSecurityIngressGrou
 resource "oci_core_network_security_group" "LBSecurityGroup" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.vcn01.id
-  display_name   = "LB_NSG"
-  defined_tags   = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
+  display_name   = "${local.namespace_name}LB_NSG"
+  defined_tags   = local.defined_tags
 }
 
 
@@ -92,7 +92,7 @@ resource "oci_core_network_security_group" "APPSecurityGroup" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.vcn01.id
   display_name   = "APP_NSG"
-  defined_tags   = { "${oci_identity_tag_namespace.ArchitectureCenterTagNamespace.name}.${oci_identity_tag.ArchitectureCenterTag.name}" = var.release }
+  defined_tags   = local.defined_tags
 }
 
 # EGRESS Rules - APPSecurityGroup 
